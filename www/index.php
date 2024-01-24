@@ -1,38 +1,57 @@
-<!DOCTYPE html>
-<html lang="fr">
+<?php
+session_start(); // global
+define("SITE_URL", str_replace("index.php", "", (isset($_SERVER['HTTPS']) ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[PHP_SELF]"));
+require "models/users/UsersManager.class.php";
+require "controllers/livres/LivresController.controller.php";
+require "controllers/users/UsersController.controller.php";
+$usersManager = new UserManager;
+$livresController = new LivresController;
+$usersController = new UsersController();
+// Routeur
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- based ccs bootstrap by bootswatch -->
-    <link rel="stylesheet" href="https://bootswatch.com/5/sketchy/bootstrap.min.css">
-    <title>Bibliothèques</title>
-</head>
-
-<body>
-    <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/">Biblio</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarColor01" aria-controls="navbarColor01" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarColor01">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="#">Accueil
-                            <span class="visually-hidden">(current)</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Livres</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Javascript bootstrap version 5 -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
-</body>
-
-</html>
+try {
+    if (empty($_GET['page'])) {
+        $livresController->afficherLivresAll(); // page par défaut
+    } else {
+        // $url = explode("/", filter_var($_GET['page'], FILTER_SANITIZE_URL));
+        $url = explode("/", $_GET['page']);
+        switch ($url[0]) {
+            case 'accueil':
+                $livresController->afficherLivresAll(); // Appel de la vue Accueil
+                break;
+            case 'livres':
+                if (empty($url[1])) {
+                    $livresController->afficherLivres(); // Appel de la vue Livres
+                } else if ($url[1] === "l") {
+                    $livresController->afficherLivre(intval($url[2])); // appel controller
+                } else if ($url[1] === "a") {
+                    $livresController->ajoutLivre();
+                } else if ($url[1] === "av") {
+                    $livresController->ajoutLivreValidation();
+                } else if ($url[1] === "m") {
+                    echo "modifier livre";
+                } else if ($url[1] === "s") {
+                    echo "supprimer livre";
+                } else {
+                    throw new Exception("La page n'existe pas");
+                }
+                break;
+            case 'a-propos':
+                require "views/a-propos.view.php"; // Appel de la vue Livres
+                break;
+            case 'connexion':
+                $usersController->connexion(); // Appel de la vue Livres
+                break;
+            case 'deconnexion':
+                $usersController->deconnexion(); // Appel methode deconnexion
+                break;
+            default:
+                throw new Exception("La page n'existe pas"); // page d'erreur
+                break;
+        }
+    }
+} catch (Exception $e) {
+    // echo $e->getMessage();
+    require "views/error/error.view.php";
+    $livresController->afficherPageError();
+}

@@ -1,2 +1,11 @@
 # vscode
 .vscode
+
+# Env File
+.env
+
+# htaccess
+.htaccess
+
+# database
+/database
